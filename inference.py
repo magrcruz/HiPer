@@ -58,8 +58,8 @@ def main():
     # Load pretrained models    
     scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False) 
     pipe = StableDiffusionPipeline.from_pretrained(args.pretrained_model_name, scheduler=scheduler, torch_dtype=torch.float16).to("cuda")
-    tokenizer = CLIPTokenizer.from_pretrained(args.pretrained_model_name, subfolder="tokenizer", use_auth_token=True)
-    CLIP_text_encoder = CLIPTextModel.from_pretrained(args.pretrained_model_name, subfolder="text_encoder", use_auth_token=True)
+    tokenizer = pipe.tokenizer#CLIPTokenizer.from_pretrained(args.pretrained_model_name, subfolder="tokenizer", use_auth_token=True)
+    CLIP_text_encoder = pipe.model.text_model#CLIPTextModel.from_pretrained(args.pretrained_model_name, subfolder="text_encoder", use_auth_token=True)
     
     
     # Encode the target text.

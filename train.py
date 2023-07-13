@@ -150,11 +150,19 @@ def main():
         weight_dtype = torch.bfloat16
         
         
-    # Load pretrained models    
-    tokenizer = CLIPTokenizer.from_pretrained(args.pretrained_model_name, subfolder="tokenizer", use_auth_token=True)
-    CLIP_text_encoder = CLIPTextModel.from_pretrained(args.pretrained_model_name, subfolder="text_encoder", use_auth_token=True)
-    vae = AutoencoderKL.from_pretrained(args.pretrained_model_name, subfolder="vae", use_auth_token=True)
-    unet = UNet2DConditionModel.from_pretrained(args.pretrained_model_name, subfolder="unet", use_auth_token=True)
+    # Load pretrained models
+    ddim_scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
+
+    pipe = StableDiffusionPipeline.from_pretrained(args.pretrained_model_name, scheduler=ddim_scheduler, torch_dtype=torch.float16).to("cuda")
+    #pipe.enable_xformers_memory_efficient_attention()
+
+    model_type = type(pipe.model.text_model)
+
+    CLIP_text_encoder = pipe.model.text_model
+    tokenizer = pipe.tokenizer
+    
+    vae = pipe.vae #AutoencoderKL.from_pretrained(args.pretrained_model_name, subfolder="vae", use_auth_token=True)
+    unet = pipe.unet #UNet2DConditionModel.from_pretrained(args.pretrained_model_name, subfolder="unet", use_auth_token=True)
     noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000)
     
 
@@ -195,8 +203,6 @@ def main():
 
 
     # For inference
-    ddim_scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
-    pipe = StableDiffusionPipeline.from_pretrained(args.pretrained_model_name, scheduler=ddim_scheduler, torch_dtype=torch.float16).to("cuda")
     num_samples = 1 
     guidance_scale = 7.5 
     num_inference_steps = 50
